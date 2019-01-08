@@ -15,8 +15,8 @@ var server = http.createServer(function (req, res) {
   var path = parsedUrl.pathname;
   var trimmedPath = path.replace(/^\/+|\/+$/g, '');
 
-  // get query string as an object, qSO = queryStringObject
-  var qSO = parsedUrl.query;
+  // get query string as an object
+  var queryStringObject = parsedUrl.query;
 
   // get the http method
   var method = req.method.toLowerCase();
@@ -36,15 +36,42 @@ var server = http.createServer(function (req, res) {
   req.on('end', function () {
     buffer += decoder.end();
 
-    // send the response
-    res.end('Hello World\n');
+    // choose request handler, or use notFound
+    var chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
 
-    // log the request path
-    // console.log('Request received on path: ' + trimmedPath + '\n' + 
-    // ' with method: ' + method + '\n' +
-    // ' with query string parameters: ', qSO);
+    // construct data object to send to handler
+    var data = {
+      'trimmedPath' : trimmedPath,
+      'queryStringObject' : queryStringObject,
+      'method' : method,
+      'headers' : headers,
+      'payload' : buffer
+    };
+
+    // route request to specified handler
+    chosenHandler(data, function (statusCode, payload) {
+      // use status code called back by handler or default to 200
+      statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
+
+      // use payload called back by handler or default to empty object
+      payload = typeof(payload) == 'object' ? payload : {};
+
+      // convert payload to a string
+      var payloadString = JSON.stringify(payload);
+
+      // return the response
+      res.writeHead(statusCode);
+      res.end(payloadString);
+
+      // log the request path
+    // console.log('Request received on path: ' + trimmedPath);
+    // console.log(' with method: ' + method);
+    // console.log(' with query string parameters: ', queryStringObject);
     // console.log('Request received with headers: ', headers);
-    console.log('Request received with payload: ', buffer);
+    // console.log('Request received with payload: ', buffer);
+    console.log('Returning response: ', statusCode, payloadString);
+
+    });
 
   });
 
@@ -55,3 +82,21 @@ server.listen(3000, function () {
   console.log('The server is listening on port 3000');
 });
 
+// define handlers
+var handlers = {};
+
+// sample handler
+handlers.sample = function (data, callback) {
+  // callback an http status code, and a payload object
+  callback(406, {'name' : 'sample handler'});
+};
+
+// not found handler
+handlers.notFound = function (data, callback) {
+  callback(404);
+};
+
+// define a request router
+var router = {
+  'sample' : handlers.sample
+};
