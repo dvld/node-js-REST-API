@@ -9,6 +9,7 @@ var url = require('url');
 var StringDecoder = require('string_decoder').StringDecoder;
 var config = require('./config');
 var fs = require('fs');
+var handlers = require('./lib/handlers');
 // var _data = require('./lib/data');
 
 // instantiate http server
