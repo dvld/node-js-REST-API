@@ -97,7 +97,7 @@ var unifiedServer = function (req, res) {
       res.writeHead(statusCode);
       res.end(payloadString);
 
-      // log the request path
+    // testing logs
     // console.log('Request received on path: ' + trimmedPath);
     // console.log(' with method: ' + method);
     // console.log(' with query string parameters: ', queryStringObject);
